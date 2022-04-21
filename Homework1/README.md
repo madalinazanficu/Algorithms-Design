@@ -1,4 +1,4 @@
-### Algorithm Design Homework
+### Algorithms Design Homework
 ### Zanficu Madalina 323CA
 
 #### **walsh.cpp** - Divide et Impera
