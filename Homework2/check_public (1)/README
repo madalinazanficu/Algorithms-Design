@@ -1,0 +1,167 @@
+### Zanficu Madalina 323CA
+### Algorithms design Homework 
+### Graphs Theory: BFS, Dijsktra, Topological Sort
+
+1. **Curatare.cpp**
+The overall idea:
+- Generate all the posibilities of assigning the dirty spaces to the robots
+    - **Backtracking** Method, due to restrictions R <= 4 and S <= 4    
+
+Method **back**:
+Example for R (robots) = 4 and S (dirty spaces) = 4:
+     S1   S2   S3   S4 
+    __________________
+0    R1   R1   R1   R1 
+    __________________
+1    R1   R1   R1   R2 
+    __________________
+2    R1   R1   R1   R3 
+    __________________
+3    R1   R1   R1   R4 
+    __________________
+4    R1   R1   R2   R1 
+    __________________
+5    R1   R1   R2   R2 
+    __________________
+6    R1   R1   R2   R3 
+    __________________
+7    R1   R1   R2   R4 
+    __________________
+8    R1   R1   R3   R1 
+    __________________
+9    R1   R1   R3   R2 
+....
+**Complexity: O(S ^ P)**: S = dirty cells, R = robots.
+(Not the best one)
+
+
+**Method *check_partition***
+For every partition, (such as this line R1   R3   R1   R1),
+every robot could be in charge with multiple spaces to clean.
+In this case, R1 has 3 spaces to clean. So I need to know where
+to go first. I will always choose the smallest distance (which is precomputed).
+After choosing the closest one, the robot has other 2 spaces.
+The robot continue the algorithm from the previous position he cleaned,
+and always choose the minimum distance from that locations to other dirty cells.
+- **Complexity O(R * S)**: R = number of robots, 
+                           S = cells assigned to every robot
+
+- **Precomputing distances**: 
+    - the distance from one dirty cells to others dirty cells
+    - the distance from one dirty cell to all robots
+    - Methods involved: compute_distance(**BFS**)
+                        check_destinations
+                        compute_all_dist 
+    - Considering every cell of the grid as a Node with 2 coordinates (x, y)
+    - **Optimization**: due to TLE, I don't start BFS(src, dst), where 
+      src and dst are one space at a time, I consider source all dirty 
+      spaces by turn, and 2 vectors of destinations: destinations to other 
+      dirty cells, and destinations to robots. (compute_distance)
+    - **Complexity one BFS O(M * N)**: M, N = grid dimensions:
+    - **Complexity compute_all_dist**: Starting at most 4 BFS
+    - **Complexity check_destination**: Linear equally with 
+                                        the number of seached cells
+
+
+- **Final solution**
+The final time is computed taking into consideration:
+    - Every robot will go to the closest cell (minimum distance).
+    - For every partition, the slowest robot influence the total 
+      time of partition.
+    - Choose the fastest partition from all.
+    - **Complexity final_time O(P)**, P = number of partitions
+
+
+2. **Fortificatii.cpp**
+In order to strengthen the paths I followed these steps:
+**Dijsktra**
+- find the minimum distances from the Capital to all non-barbarian locations
+**all_paths**
+- for each non-barbarian location: find all the paths to them 
+(not only the smallest ones).
+- after these steps: we need to decide on which ways to add fortifications:
+**search**
+- sort all the paths and find the average one
+- the average is made between:
+  left = the smallest distance path
+  right which is the smallest distance + total number of fortifications.
+- after finding an average path, or the closest path smaller than the average
+- check is there are enough fortifications, for all the paths smaller 
+  than the average.
+- in case all paths in need are covered with the number of fortifications,
+  search for a better average path: average + 1.
+- **Complexity** Dijsktra: O(E + ElogE)
+                 find_all_paths: O(B * N),
+                 search: O(P * P)
+                 P = number of paths to all barbars
+                 E = number of edges
+                 B = number of barbars
+                 N = number of nodes
+
+    
+3. **Beamdrone.cpp**
+The main idea is to find the least expensive way from source to destination.
+Every cell of the grid is intereprted as a Node, with fields:
+    -> x, y for coordinates
+    -> cost      (used in traversal)
+    -> direction (used in traversal) 
+
+How I interprted the cost?
+Following Dijsktra Algorithm and constructing the costs 
+while traversing depending on the changing direction.
+
+- Methods **Dijsktra && check_neigh**
+For example, I am starting from (0, 0) coordinates.
+After extracting this Node from the queue, I am adding his neighbours,
+if they respect smaller or equal cost condition and not getting out of the grid.
+So, the neighbours that respect these conditions are: (0, 1) and (1, 0)
+In this moment the cost for both of them is 0, because their parent is 
+the root, and it didn't care about the direction.
+After this, when extracting Node {(0, 1), 0, 4)} meaning 
+- coordinates (0, 1)
+- cost = 0
+- direction = 4 (coming from West and going to East)
+In order to add his neighbour, I need to take care in 
+which direction the neighbour is going. In case direction is
+- the same => East = 4 => there is no cost
+- going backwards => West = 3 => this move is not allowed
+- either South or North => the cost of the neigh would be previous_cost + 1,
+where previous_cost = the cost of the parent.
+
+- **Complexity**: O(E + VlogV) -> Dijsktra,
+where E = edges = number of links -> every node has at most 4 neighbours
+where V = vertices = number of cells in the grid => n * n
+
+
+4. **Curse.cpp**
+The solution consist in:
+- finding the dependencies between nodes
+- appling Topological Sort Algorithm (DFS approach)
+
+Consider this example:
+N M A
+3 3 4
+
+order:
+2 1 3
+1 3 2
+1 2 2
+1 2 1
+
+The trainings are sorted from the best one to the weakest one.
+Also the first track which has the smallest index (column's index) 
+is considered the most semnificative one.
+
+In **create_graph**, I am traversing the order matrix on columns such as:
+- When order[training][track] = car1 **>** order[training + 1][track] = car2, 
+it means car1 is better that car2 (case order[0][0], order[1][0]) =>
+there is a dependecy: car1 ---> car2
+Why? because training 0 is consider better than training 1
+- When car1 == car2 => we need to check the next track, for the same trainings
+=> (order[1][0] == order[2][0]) => check order[1][1] and order[2][1].
+
+**Complexity**: O(N + M) for topo-sort
+
+=> (order[1][0] == order[2][0]) => check order[1][1] and order[2][1].
+
+**Complexity**: O(N + M) for topo-sort
