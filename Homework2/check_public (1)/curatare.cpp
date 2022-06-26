@@ -31,7 +31,7 @@ class Solve {
 	std::vector<std::vector<int>> dist_robots_spaces;
 
 	void read() {
-	    std::ifstream in;
+		std::ifstream in;
         in.open("./curatare.in");
 
 		in >> n >> m;
